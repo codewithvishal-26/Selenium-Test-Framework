@@ -1,0 +1,17 @@
+# Build output
+/target/
+/test-output/
+/logs/
+
+# IDE files
+.settings/
+.vscode/
+.classpath
+.project
+
+# Screenshots (regenerated每 run - optional, remove this line if you want to keep them in git)
+src/test/resources/screenshots/*.png
+
+# OS files
+Thumbs.db
+.DS_Store
