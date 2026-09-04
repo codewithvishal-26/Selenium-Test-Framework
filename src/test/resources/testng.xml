@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+
+<suite name="OrangeHRM Automation Suite"
+       parallel="tests"
+       thread-count="3">
+
+    <listeners>
+
+        <listener class-name="com.orangehrm.listeners.TestListener"/>
+
+    </listeners>
+
+    <!-- ==============================
+         Chrome Execution
+         ============================== -->
+
+    <test name="OrangeHRM_Chrome">
+
+        <parameter name="browser" value="chrome"/>
+
+        <classes>
+
+            <class name="com.orangehrm.test.LoginPageTest"/>
+            <class name="com.orangehrm.test.HomePageTest"/> 
+            <class name="com.orangehrm.test.DBVerificationTest"/>
+            <class name="com.orangehrm.test.ApiTest"/>
+
+            <class name="com.orangehrm.test.AdminUserManagementTest"/>
+            <class name="com.orangehrm.test.PIMTest"/> 
+            <class name="com.orangehrm.test.LeaveTest"/>
+           <class name="com.orangehrm.test.TimeTest"/>
+            <class name="com.orangehrm.test.RecruitmentTest"/>
+
+            <class name="com.orangehrm.test.MyInfoTest"/>
+            <class name="com.orangehrm.test.PerformanceTest"/> 
+            <class name="com.orangehrm.test.DirectoryTest"/> 
+            <class name="com.orangehrm.test.MaintenanceTest"/>
+            <class name="com.orangehrm.test.ClaimTest"/> 
+            <class name="com.orangehrm.test.BuzzTest"/> 
+            <class name="com.orangehrm.test.DashboardTest"/>
+
+        </classes>
+
+    </test>
+
+</suite>
