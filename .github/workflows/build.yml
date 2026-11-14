@@ -1,0 +1,21 @@
+name: Build
+
+# Compiles main + test code on every push/PR so a broken build is caught early.
+# UI tests are NOT run here: they need a live OrangeHRM instance (see README).
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Compile (main + tests)
+        run: mvn -B -DskipTests test-compile

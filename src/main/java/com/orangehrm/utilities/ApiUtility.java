@@ -14,7 +14,7 @@ public class ApiUtility {
 	public static Response sendPostRequest(String endPoint,String payLoad ) {
 		return RestAssured.given().header("Content-Type","application/json")
 		                   .body(payLoad)
-		                   .post(); 
+		                   .post(endPoint);
 	}
 	
 	//Method to validate the response status 

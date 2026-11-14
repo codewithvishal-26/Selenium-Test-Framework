@@ -67,14 +67,23 @@ public class TimePage {
 		actionDriver.dismissAnyOpenDropdown();
 	}
 
-	// URL-based verification, same reliable pattern used for PIM's
-	// post-save check - a URL change is a strong, low-assumption signal
-	// that navigation actually succeeded.
+	// Waits for the URL to change instead of reading it immediately after
+	// the click (reading too early was the cause of a flaky first attempt).
 	public boolean isOnTimesheetPage() {
-		return actionDriver.getCurrentUrl().contains("viewTimesheet");
+		try {
+			actionDriver.waitUntilUrlContains("viewTimesheet");
+			return true;
+		} catch (org.openqa.selenium.TimeoutException e) {
+			return false;
+		}
 	}
 
 	public boolean isOnMyRecordsPage() {
-		return actionDriver.getCurrentUrl().toLowerCase().contains("attendance");
+		try {
+			actionDriver.waitUntilUrlContains("attendance");
+			return true;
+		} catch (org.openqa.selenium.TimeoutException e) {
+			return false;
+		}
 	}
 }

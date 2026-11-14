@@ -36,7 +36,9 @@ public class ExtentManager {
 
             String reportPath =
                     System.getProperty("user.dir")
-                    + "/src/test/resources/ExtentReport/ExtentReport.html";
+                    + "/target/reports/ExtentReport.html";
+
+            new File(reportPath).getParentFile().mkdirs();
 
             ExtentSparkReporter spark =
                     new ExtentSparkReporter(reportPath);
@@ -204,7 +206,7 @@ public class ExtentManager {
 
         String destinationPath =
                 System.getProperty("user.dir")
-                + "/src/test/resources/screenshots/"
+                + "/target/screenshots/"
                 + screenshotName
                 + "_"
                 + timeStamp

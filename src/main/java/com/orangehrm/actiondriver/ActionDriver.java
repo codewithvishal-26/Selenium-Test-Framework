@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -1025,8 +1026,13 @@ public class ActionDriver {
                     getElementDescription(by)
             );
 
-        } catch (Exception e) {
+        } catch (TimeoutException e) {
 
+            // Expected outcome for an optional element: it never became
+            // clickable within the short wait. Anything else (a genuine
+            // click interception, an invalid selector, a dead session)
+            // should NOT be silently swallowed here - it propagates up
+            // instead of being mislabeled as "element not present".
             logger.info(
                     "Optional element not present: {}",
                     by

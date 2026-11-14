@@ -114,15 +114,7 @@ public class BaseClass {
             );
         }
 
-        boolean seleniumGrid =
-                Boolean.parseBoolean(
-                        prop.getProperty(
-                                "seleniumGrid",
-                                "false"
-                        )
-                );
-
-        if (seleniumGrid) {
+        if (isSeleniumGridEnabled()) {
 
             launchRemoteBrowser(browser);
 
@@ -130,6 +122,35 @@ public class BaseClass {
 
             launchLocalBrowser(browser);
         }
+    }
+
+    /**
+     * Single source of truth for whether Selenium Grid is enabled.
+     *
+     * Previously, launchBrowser() checked only config.properties while
+     * configureBrowser() checked the system property first. That mismatch
+     * meant a Jenkins/Maven run passing -DseleniumGrid=true (without also
+     * editing config.properties) would create a LOCAL WebDriver but point
+     * it at the GRID application URL - guaranteed failure. Both call sites
+     * now resolve the flag the same way, with a consistent priority:
+     *   1. Java system property   (-DseleniumGrid=true)
+     *   2. Environment variable   (SELENIUM_GRID=true)
+     *   3. config.properties      (seleniumGrid=...)
+     *   4. Default: false
+     */
+    private boolean isSeleniumGridEnabled() {
+
+        String value = System.getProperty("seleniumGrid");
+
+        if (value == null) {
+            value = System.getenv("SELENIUM_GRID");
+        }
+
+        if (value == null) {
+            value = prop.getProperty("seleniumGrid", "false");
+        }
+
+        return Boolean.parseBoolean(value);
     }
 
     /**
@@ -329,16 +350,7 @@ public class BaseClass {
      */
     private void configureBrowser() {
 
-        boolean seleniumGrid =
-                Boolean.parseBoolean(
-                        System.getProperty(
-                                "seleniumGrid",
-                                prop.getProperty(
-                                        "seleniumGrid",
-                                        "false"
-                                )
-                        )
-                );
+        boolean seleniumGrid = isSeleniumGridEnabled();
 
         // Explicit waits are handled by ActionDriver.
         // Therefore implicit wait remains disabled.
@@ -471,8 +483,20 @@ public class BaseClass {
     }
 
     /**
-     * Static wait utility.
-     * Prefer explicit waits through ActionDriver for UI synchronization.
+     * Static wait utility - an intentional escape hatch, not the default
+     * synchronization strategy.
+     *
+     * Only 5 call sites in the whole suite use this (LoginPageTest,
+     * AdminUserManagementTest, DBVerificationTest), each with a short
+     * 1-2 second pause. They were NOT converted to condition-based waits
+     * here because doing so blind - without a live OrangeHRM instance to
+     * re-run the suite against - risks swapping a working wait for a
+     * guessed locator/condition that silently breaks a currently-passing
+     * test. Every other synchronization point in the framework already
+     * goes through ActionDriver's explicit waits; if you touch one of
+     * these 5 call sites, replace it with a real condition
+     * (ExpectedConditions.visibilityOfElementLocated, a URL change, etc.)
+     * and re-run that specific test before trusting the change.
      */
     public static void staticWait(int seconds) {
 

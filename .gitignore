@@ -15,5 +15,7 @@ src/test/resources/screenshots/*.png
 # OS files
 Thumbs.db
 .DS_Store
+
+# Legacy report/screenshot locations (now written under target/)
 src/test/resources/ExtentReport/
-test-output/
+src/test/resources/screenshots/

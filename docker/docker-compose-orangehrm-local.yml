@@ -1,4 +1,6 @@
 services:
+  # LOCAL/DEMO ONLY: empty root password is convenient for a disposable
+  # local instance. Never use this setup on a shared or public host.
   mysql:
     image: mysql:8.0
     container_name: orangehrm-mysql
@@ -11,6 +13,8 @@ services:
       - orangehrm_db_data:/var/lib/mysql
 
   orangehrm:
+    # TODO: pin to a specific release tag (check Docker Hub for the version
+    # you tested against) so a new upstream image can't silently break the suite.
     image: orangehrm/orangehrm:latest
     container_name: orangehrm-app
     depends_on:

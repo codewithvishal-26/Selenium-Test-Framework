@@ -1,69 +1,63 @@
-# OrangeHRM Selenium Test Automation Framework
+# OrangeHRM Test Automation Framework
 
-An end-to-end **UI + API + Database** test automation framework built for [OrangeHRM](https://www.orangehrm.com/), an open-source HR Management System. Built with **Java, Selenium WebDriver, and TestNG**, following the **Page Object Model**.
+Selenium WebDriver + Java + TestNG + Maven framework (Page Object Model) that automates real workflows of [OrangeHRM](https://www.orangehrm.com/), an open-source HR system with a dynamic Vue.js UI (custom dropdowns, autocompletes, modals).
 
-**Latest full run: 28/28 tests passed ✅**
+## Coverage
+16 test classes, 30 `@Test` methods:
 
-## Tech Stack
-
-| Component | Technology |
+| Module | What is automated |
 |---|---|
-| Language / Build | Java 17, Maven |
-| Automation | Selenium WebDriver 4.27.0 |
-| Test Framework | TestNG 7.10.2 (parallel execution, retry analyzer) |
-| Design Pattern | Page Object Model + reusable `ActionDriver` |
-| Reporting | ExtentReports 5.1.2, TestNG HTML/XML, screenshots on failure |
-| Logging | Log4j2 |
-| Data-Driven Testing | Apache POI (Excel) |
-| API Testing | RestAssured 5.5.0 |
-| DB Verification | MySQL (JDBC) |
-| Environment | Docker Compose |
-| CI/CD | Jenkinsfile |
+| Login / Home / Dashboard | valid + invalid login, page load checks |
+| Admin | add system user, invalid-employee validation, search by username |
+| PIM | add employee, search employee |
+| Leave | leave period, leave type, entitlement, assign leave, apply leave |
+| Time | punch in/out, timesheet, my records |
+| Recruitment | job title -> vacancy -> candidate |
+| My Info | update personal details |
+| Performance | add KPI |
+| Directory, Claim, Buzz, Maintenance | search / create / admin re-auth flows |
+| API (REST Assured) | GET request + status/field validation |
+| DB (JDBC, optional) | DB verification (excluded unless configured) |
 
-## Modules Covered
-
-Login, Home/Dashboard, Admin User Management, PIM, Leave, Time & Attendance, Recruitment, My Info, Performance (KPI), Directory, Maintenance, Claim, Buzz, Database Verification, and REST API checks — **16 test classes** in total.
-
-## Project Structure
-
+## Architecture
 ```
 src/main/java/com/orangehrm/
-  actiondriver/   -> reusable Selenium action wrapper
-  base/           -> WebDriver setup/teardown (BaseClass)
-  listeners/      -> TestNG listener (screenshots, reporting hooks)
-  pages/          -> Page Object classes, one per module
-  utilities/      -> Excel reader, DB connection, API utility, logging, retry logic
-src/test/java/com/orangehrm/test/   -> test classes
-src/test/resources/                 -> testng.xml, test data (Excel)
-docker/                             -> local OrangeHRM + MySQL environment
-Jenkinsfile                         -> CI pipeline definition
+  base/         BaseClass: ThreadLocal WebDriver + ActionDriver, Chrome/Firefox/Edge, local or Selenium Grid
+  actiondriver/ ActionDriver: explicit-wait click/type/verify layer (fail-fast)
+  pages/        Page Objects (one per module)
+  listeners/    TestListener: Extent reporting, screenshots, retry hook
+  utilities/    ExtentManager, RetryAnalyzer, ApiUtility, DBConnection, Excel/DataProviders, Logger
+src/test/java/.../test/   test classes
+src/test/resources/testng.xml
+docker/         Selenium Grid + optional local OrangeHRM compose files
+Jenkinsfile     Windows-agent pipeline
 ```
+Design points:
+- **ThreadLocal driver** - each thread gets its own browser session.
+- **Explicit waits only** - implicit wait is disabled to avoid compounding waits.
+- **Fail-fast actions** - click/type failures throw immediately instead of being swallowed.
+- **Robust locators** - `contains()`/`normalize-space()` and exact class-token matching, built from verified DOM.
+- **Self-contained tests** - tests create their own prerequisite data with unique values and weekday-only dates.
 
-## Running the Suite
+## Run
+Requirements: JDK 17+, Maven, Chrome, a running OrangeHRM (default `http://localhost:8081`, see `docker/docker-compose-orangehrm-local.yml`).
 
-**Prerequisites:** Java 17, Maven, Chrome browser (or the Docker environment below).
+1. Edit `src/main/resources/config.properties` (URL, username, password).
+2. Run: `mvn clean test`
+3. Reports: `target/reports/ExtentReport.html`, failure screenshots in `target/screenshots/`.
 
-```bash
-# Run against configured environment
-mvn clean test
+Grid mode: start `docker/docker-compose.yml`, then `mvn clean test -DseleniumGrid=true`.
+Grid flag priority: `-DseleniumGrid` > env `SELENIUM_GRID` > `config.properties`. Note the pom sets a default `seleniumGrid=false`, so under Maven use `-D` to turn it on.
 
-# Or spin up a local OrangeHRM + MySQL instance first
-docker compose -f docker/docker-compose-orangehrm-local.yml up -d
-mvn clean test
-```
+## Known limitations (honest list)
+- `parallel="tests"` in testng.xml has no effect with a single `<test>` block; the suite effectively runs sequentially. True parallelism needs independent tests (`parallel="classes"`).
+- Tests create data and do not clean it up; the punch-in/out test depends on the account's current state.
+- A few short `staticWait()` calls remain (Login, Admin, DB tests).
+- `DBVerificationTest` needs real `db.*` values in config.properties.
+- `config.properties` holds demo credentials for a local instance - use env vars/Jenkins credentials for anything shared.
+- Jenkinsfile needs a Windows agent; not yet verified end to end.
+- Pin the OrangeHRM image tag in the compose file before relying on it.
+- Locators target one OrangeHRM version and may need updates for another.
 
-Configuration (base URL, browser, DB credentials) lives in `src/main/resources/config.properties`.
-
-## Reports
-
-After a run, find results at:
-- `test-output/` — TestNG HTML/XML report
-- `src/test/resources/ExtentReport/ExtentReport.html` — Extent report with screenshots
-
-## CI/CD
-
-The included `Jenkinsfile` runs the suite as a Jenkins pipeline job and can be adapted to publish the reports above as build artifacts.
-
-## Author
-
-Built as a personal QA automation project to practice framework design, data-driven and API testing, database verification, containerized test environments, and CI/CD integration.
+## Planned improvements
+`BasePage` with injected driver, splitting `ActionDriver` (waits vs actions), test data cleanup, parallel + cross-browser matrix, API POST/PUT/DELETE tests.
