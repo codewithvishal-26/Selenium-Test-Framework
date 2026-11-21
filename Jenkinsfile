@@ -36,13 +36,15 @@ pipeline {
                 // waitUntil retries with a growing pause between tries.
                 // (Windows `timeout` fails under Jenkins: "Input redirection
                 // is not supported", so the retry logic lives in Groovy.)
-                timeout(time: 3, unit: 'MINUTES') {
-                    waitUntil(initialRecurrencePeriod: 3000) {
-                        def code = bat(
-                            returnStatus: true,
-                            script: '@curl -s http://localhost:4444/status | findstr /R /C:"ready.: true"'
-                        )
-                        return code == 0
+                script {
+                    timeout(time: 3, unit: 'MINUTES') {
+                        waitUntil(initialRecurrencePeriod: 3000) {
+                            def code = bat(
+                                returnStatus: true,
+                                script: '@curl -s http://localhost:4444/status | findstr /R /C:"ready.: true"'
+                            )
+                            return code == 0
+                        }
                     }
                 }
                 echo "Grid is ready"
