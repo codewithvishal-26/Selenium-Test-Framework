@@ -30,21 +30,22 @@ pipeline {
         stage('Start Selenium Grid') {
             steps {
                 echo "Starting Selenium Grid..."
-                bat "docker compose -f \"${COMPOSE_FILE}\" up -d"
+                bat "docker compose -p selenium-grid -f \"${COMPOSE_FILE}\" up -d"
 
-                echo "Waiting for Grid to report ready (polling, max ~2 min)..."
-                bat '''
-                    @echo off
-                    set /a tries=0
-                    :wait
-                    curl -s http://localhost:4444/status | findstr /C:"\\"ready\\": true" >nul && goto ready
-                    set /a tries+=1
-                    if %tries% GEQ 40 (echo Grid not ready & exit /b 1)
-                    timeout /t 3 /nobreak >nul
-                    goto wait
-                    :ready
-                    echo Grid is ready
-                '''
+                echo "Waiting for Grid to report ready (max 3 min)..."
+                // waitUntil retries with a growing pause between tries.
+                // (Windows `timeout` fails under Jenkins: "Input redirection
+                // is not supported", so the retry logic lives in Groovy.)
+                timeout(time: 3, unit: 'MINUTES') {
+                    waitUntil(initialRecurrencePeriod: 3000) {
+                        def code = bat(
+                            returnStatus: true,
+                            script: '@curl -s http://localhost:4444/status | findstr /R /C:"ready.: true"'
+                        )
+                        return code == 0
+                    }
+                }
+                echo "Grid is ready"
             }
         }
 
@@ -67,7 +68,7 @@ pipeline {
 
         always {
             echo "Stopping Selenium Grid..."
-            bat "docker compose -f \"${COMPOSE_FILE}\" down"
+            bat "docker compose -p selenium-grid -f \"${COMPOSE_FILE}\" down"
 
             // Publish even when tests fail, so the report is always available.
             // allowMissing is false: a missing report means something is wrong.
